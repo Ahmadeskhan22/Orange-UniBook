@@ -1,12 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../Orders/OrderModel.dart';
-import 'CartItemModel.dart';
+import '../Orders/OrderModel.dart'; // مسار افتراضي
+import 'package:storeub/Carts/CartItemModel.dart';
 
-//import /services/order_service.dart';
+// نقطة النهاية (Endpoint) التي يجب الاتفاق عليها
 const String API_URL = 'https://your-api-server.com/api/v1/place-order';
 
+// fake API should   be member 1 add it`s
+// [ProductModel و DeliveryDetails تبقى كما هي]
 class ProductModel {
   final String id;
   final String title;
@@ -20,18 +22,34 @@ class ProductModel {
   });
 }
 
+// name university and information for delivery --
+//address clint, num of bulding
 class DeliveryDetails {
-  final String address;
-  final String contact;
-  DeliveryDetails({required this.address, required this.contact});
+  //name of university
+  final String universityOrCity;
+  // address of collage or bulding inside unversity
+  final String detailedAddress;
+  //number of clint to coneact
+  final String contactNumber;
+  // Optaions for conect message, call
+  final String? deliveryInstructions;
+
+  DeliveryDetails({
+    required this.universityOrCity,
+    required this.detailedAddress,
+    required this.contactNumber,
+    this.deliveryInstructions,
+  });
 }
 
 class CartController with ChangeNotifier {
   final List<CartItemModel> _items = [];
 
+  // ⬅️ تصحيح الـ Getter لـ cartItems ليعود بقائمة صالحة
   List<CartItemModel> get cartItems => [..._items];
 
   double get totalAmount {
+    // ...
     return _items.fold(0.0, (sum, item) => sum + item.subtotal);
   }
 
@@ -62,6 +80,20 @@ class CartController with ChangeNotifier {
   void removeFromCart(String productId) {
     _items.removeWhere((item) => item.productId == productId);
     notifyListeners();
+  }
+
+  void updateQuantity(String productId, int newQuantity) {
+    if (newQuantity <= 0) {
+      removeFromCart(productId); // احذف إذا أصبحت الكمية صفر
+      return;
+    }
+
+    final index = _findCartItemIndex(productId);
+
+    if (index >= 0) {
+      _items[index].quantity = newQuantity;
+      notifyListeners();
+    }
   }
 
   void clearCart() {
