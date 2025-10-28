@@ -14,7 +14,7 @@ class CartScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cart'),
+        title: Text('Cart'),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -69,7 +69,7 @@ class CartItemCard extends StatelessWidget {
     final cartController = Provider.of<CartController>(context, listen: false);
 
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      margin: EdgeInsets.symmetric(vertical: 8.0),
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Padding(
@@ -90,6 +90,7 @@ class CartItemCard extends StatelessWidget {
                   fit: BoxFit.cover,
                   errorBuilder:
                       (context, error, stackTrace) => Image.asset(
+                        // API -----
                         'UX/mdi-light_image insidecart.png', //fake url for image---add it by  API
                         fit: BoxFit.cover,
                       ),
@@ -109,12 +110,12 @@ class CartItemCard extends StatelessWidget {
                   ),
                   SizedBox(height: 4),
                   const Text(
-                    'features',
+                    'features', // API
                     style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                   SizedBox(height: 4),
                   Text(
-                    'Price : \$${item.price.toStringAsFixed(2)} JD',
+                    'Price : \$${item.price.toStringAsFixed(2)} JD', // API
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                 ],
@@ -194,11 +195,11 @@ class PaymentSummaryWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Payment summary',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 15),
+          const SizedBox(height: 15),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -209,29 +210,44 @@ class PaymentSummaryWidget extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Service fee', style: TextStyle(fontSize: 16)), /////
-              const Text(
-                '0.00 JD', ////
-                style: TextStyle(fontSize: 16),
-              ),
-
-              const Divider(height: 25, thickness: 1),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Total amount',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '\$${cartController.totalAmount.toStringAsFixed(2)} JD',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  Text('Service fee', style: TextStyle(fontSize: 16)),
+                  SizedBox(width: 4),
+                  Icon(Icons.info_outline, size: 16, color: Colors.grey),
                 ],
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.attach_money, size: 16, color: Colors.grey),
+                  SizedBox(width: 2),
+
+                  Text('0.00 JD', style: TextStyle(fontSize: 16)),
+                ],
+              ),
+            ],
+          ),
+
+          const Divider(height: 25, thickness: 1),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Total amount',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                '\$${cartController.totalAmount.toStringAsFixed(2)} JD',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),

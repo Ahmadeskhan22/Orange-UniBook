@@ -5,21 +5,19 @@ class OrderModel {
   final String orderID;
   final double totalAmount;
   final String deliveryDetails;
-  final String contactNumber; // ⬅️ إضافة حقل رقم التواصل
+  final String contactNumber;
   final List<CartItemModel> items;
 
   OrderModel({
     required this.userID,
     required this.totalAmount,
     required this.deliveryDetails,
-    required this.contactNumber, // ⬅️ متطلب جديد
+    required this.contactNumber,
     required this.items,
     required this.orderID,
   });
 
   // -----------------------------------------------------------------
-  // دالة التحويل (toMap) للـ API
-  //function tomap --- API
   // -----------------------------------------------------------------
   Map<String, dynamic> toMap() {
     return {

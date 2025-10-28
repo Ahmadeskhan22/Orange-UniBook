@@ -4,8 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:storeub/Carts/cart_controller.dart';
 import 'package:storeub/screens/done_screen.dart';
-//  PaymentSummaryWidget
 import 'package:storeub/screens/cart_screen.dart';
+import 'package:location/location.dart';
+import 'package:geocoding/geocoding.dart' as geo;
+import 'package:storeub/services/location_service.dart';
+
+final LocationService _locationService = LocationService();
 
 enum DeliveryInstruction { call, message }
 
@@ -21,18 +25,67 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   DeliveryInstruction _deliveryOption = DeliveryInstruction.call;
   PaymentMethod _paymentOption = PaymentMethod.cash;
   bool _isLoading = false;
+  bool _locationLoading = false;
+  String? _fetchedAddress;
+  final LocationService _locationService = LocationService();
+  Future<void> _handleGetLocation() async {
+    setState(() {
+      _locationLoading = true;
+      _fetchedAddress = null;
+    });
 
+    try {
+      final address = await _locationService.getCurrentAddress();
+      if (mounted) {
+        setState(() {
+          _fetchedAddress = address;
+          _locationLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _fetchedAddress = "Could not get location";
+          _locationLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceFirst("Exception: ", ""))),
+        );
+      }
+    }
+  }
+
+  //final _addressController = TextEditingController();
   Future<void> _submitOrder() async {
+    if (_fetchedAddress == null ||
+        _fetchedAddress!.isEmpty ||
+        _fetchedAddress!.contains("Could not")) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please get your current location first.'),
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
-
-    final cartController = Provider.of<CartController>(context, listen: false);
+    final CartController cartController = Provider.of<CartController>(
+      context,
+      listen: true,
+    );
+    ///////////TODO ADD  INFORMATION FRO USER
+    String actualUserID = "real_user_id_from_auth";
+    String actualPhoneNumber = "+96278123456";
+    //////////////////////////////////////
 
     bool orderSuccess = await cartController.placeOrder(
-      deliveryAddress: "Name of University - (From UI)", //
-      contactNumber: "+96278...78", //
-      userID: "mock_user_12345", //
+      deliveryAddress: _fetchedAddress!,
+      ///////////TODO ADD  INFORMATION FRO USER ,   contactNumber: actualPhoneNumber,
+      //       userID: actualUserID,
+      contactNumber: actualPhoneNumber,
+      userID: actualUserID,
     );
 
     if (mounted) {
@@ -41,7 +94,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       });
     }
 
-    if (!mounted) return; //
+    if (!mounted) return;
 
     if (orderSuccess) {
       Navigator.pushReplacement(
@@ -61,7 +114,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chechout'),
+        title: const Text('Checkout'), //
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -79,19 +132,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             children: [
               _buildLocationInfo(),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Delivery instruction',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               _buildDeliveryOptions(),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Pay with',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               _buildPaymentOptions(),
               const SizedBox(height: 24),
-              const PaymentSummaryWidget(),
+              PaymentSummaryWidget(),
             ],
           ),
         ),
@@ -122,26 +175,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildLocationInfo() {
     return Row(
       children: [
-        Image.asset('UX/gis_poi-map.png', width: 60, height: 60),
+        Icon(Icons.location_on, color: Colors.black, size: 40),
         const SizedBox(width: 12),
         const Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Name of University',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              Text(
-                'Phone number : +96278****78',
-                style: TextStyle(color: Colors.grey),
+                'Select your location',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
             ],
           ),
         ),
         TextButton(
-          onPressed: () {},
-          child: const Text('Change', style: TextStyle(color: Colors.orange)),
+          onPressed: _locationLoading ? null : _handleGetLocation,
+          child: Text('Change', style: TextStyle(color: Colors.orange)),
         ),
       ],
     );
@@ -150,29 +199,35 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildDeliveryOptions() {
     return Column(
       children: [
-        RadioListTile<DeliveryInstruction>(
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.phone_in_talk_outlined),
           title: const Text('Call on arrival'),
-          secondary: const Icon(Icons.phone_in_talk_outlined),
-          value: DeliveryInstruction.call,
-          groupValue: _deliveryOption,
-          onChanged: (DeliveryInstruction? value) {
-            setState(() {
-              _deliveryOption = value!;
-            });
-          },
-          activeColor: Colors.orange,
+          trailing: Radio<DeliveryInstruction>(
+            value: DeliveryInstruction.call,
+            groupValue: _deliveryOption,
+            onChanged: (DeliveryInstruction? value) {
+              setState(() {
+                _deliveryOption = value!;
+              });
+            },
+            activeColor: Colors.orange,
+          ),
         ),
-        RadioListTile<DeliveryInstruction>(
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.sms_outlined),
           title: const Text('Message on arrival'),
-          secondary: const Icon(Icons.sms_outlined),
-          value: DeliveryInstruction.message,
-          groupValue: _deliveryOption,
-          onChanged: (DeliveryInstruction? value) {
-            setState(() {
-              _deliveryOption = value!;
-            });
-          },
-          activeColor: Colors.orange,
+          trailing: Radio<DeliveryInstruction>(
+            value: DeliveryInstruction.message,
+            groupValue: _deliveryOption,
+            onChanged: (DeliveryInstruction? value) {
+              setState(() {
+                _deliveryOption = value!;
+              });
+            },
+            activeColor: Colors.orange,
+          ),
         ),
       ],
     );
@@ -181,24 +236,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildPaymentOptions() {
     return Column(
       children: [
-        RadioListTile<PaymentMethod>(
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.add_card_outlined),
           title: const Text('Add new card'),
-          secondary: const Icon(Icons.add_card_outlined),
-          value: PaymentMethod.card,
-          groupValue: _paymentOption,
-          onChanged: null, //
+          trailing: Radio<PaymentMethod>(
+            value: PaymentMethod.card,
+            groupValue: _paymentOption,
+            onChanged: (PaymentMethod? value) {
+              setState(() {
+                _paymentOption = value!;
+              });
+            },
+            activeColor: Colors.orange, //
+          ),
         ),
-        RadioListTile<PaymentMethod>(
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Image.asset(
+            'assets/images/cash icon.png',
+            width: 24,
+            height: 24,
+          ),
           title: const Text('Cash'),
-          secondary: Image.asset('UX/cash icon.png', width: 24, height: 24),
-          value: PaymentMethod.cash,
-          groupValue: _paymentOption,
-          onChanged: (PaymentMethod? value) {
-            setState(() {
-              _paymentOption = value!;
-            });
-          },
-          activeColor: Colors.orange,
+          trailing: Radio<PaymentMethod>(
+            value: PaymentMethod.cash,
+            groupValue: _paymentOption,
+            onChanged: (PaymentMethod? value) {
+              setState(() {
+                _paymentOption = value!;
+              });
+            },
+            activeColor: Colors.orange,
+          ),
         ),
       ],
     );

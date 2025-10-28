@@ -1,26 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../Orders/OrderModel.dart'; // مسار افتراضي
+import 'package:storeub/Orders/OrderModel.dart';
 import 'package:storeub/Carts/CartItemModel.dart';
 
-// نقطة النهاية (Endpoint) التي يجب الاتفاق عليها
-const String API_URL = 'https://your-api-server.com/api/v1/place-order';
+const String API_URL =
+    'https://www.googleapis.com/books/v1/volumes?q=programming+flutter+university&maxResults=20'; // API --from google
 
 // fake API should   be member 1 add it`s
-// [ProductModel و DeliveryDetails تبقى كما هي]
-class ProductModel {
-  final String id;
-  final String title;
-  final double price;
-  final String imageUrl;
-  ProductModel({
-    required this.id,
-    required this.title,
-    required this.price,
-    required this.imageUrl,
-  });
-}
 
 // name university and information for delivery --
 //address clint, num of bulding
@@ -45,11 +32,9 @@ class DeliveryDetails {
 class CartController with ChangeNotifier {
   final List<CartItemModel> _items = [];
 
-  // ⬅️ تصحيح الـ Getter لـ cartItems ليعود بقائمة صالحة
   List<CartItemModel> get cartItems => [..._items];
 
   double get totalAmount {
-    // ...
     return _items.fold(0.0, (sum, item) => sum + item.subtotal);
   }
 
@@ -84,7 +69,7 @@ class CartController with ChangeNotifier {
 
   void updateQuantity(String productId, int newQuantity) {
     if (newQuantity <= 0) {
-      removeFromCart(productId); // احذف إذا أصبحت الكمية صفر
+      removeFromCart(productId); //
       return;
     }
 
