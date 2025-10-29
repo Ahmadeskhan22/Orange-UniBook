@@ -19,6 +19,8 @@ dependencies:
   foundation: ^0.0.5
   location: ^8.0.1
   geocoding: ^4.0.0
+  firebase_auth: ^4.16.0
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:
