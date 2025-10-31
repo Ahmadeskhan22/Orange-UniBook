@@ -4,36 +4,12 @@ import 'package:http/http.dart' as http;
 import 'package:storeub/Orders/OrderModel.dart';
 import 'package:storeub/Carts/CartItemModel.dart';
 
-const String API_URL =
-    'https://www.googleapis.com/books/v1/volumes?q=programming+flutter+university&maxResults=20'; // API --from google
-
-// fake API should   be member 1 add it`s
-
-// name university and information for delivery --
-//address clint, num of bulding
-class DeliveryDetails {
-  //name of university
-  final String universityOrCity;
-  // address of collage or bulding inside unversity
-  final String detailedAddress;
-  //number of clint to coneact
-  final String contactNumber;
-  // Optaions for conect message, call
-  final String? deliveryInstructions;
-
-  DeliveryDetails({
-    required this.universityOrCity,
-    required this.detailedAddress,
-    required this.contactNumber,
-    this.deliveryInstructions,
-  });
-}
+const String API_URL = 'https://jsonplaceholder.typicode.com/posts';
 
 class CartController with ChangeNotifier {
   final List<CartItemModel> _items = [];
 
   List<CartItemModel> get cartItems => [..._items];
-
   double get totalAmount {
     return _items.fold(0.0, (sum, item) => sum + item.subtotal);
   }
@@ -69,12 +45,10 @@ class CartController with ChangeNotifier {
 
   void updateQuantity(String productId, int newQuantity) {
     if (newQuantity <= 0) {
-      removeFromCart(productId); //
+      removeFromCart(productId);
       return;
     }
-
     final index = _findCartItemIndex(productId);
-
     if (index >= 0) {
       _items[index].quantity = newQuantity;
       notifyListeners();
@@ -120,7 +94,9 @@ class CartController with ChangeNotifier {
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         if (kDebugMode) {
-          print('Order Placed Successfully! Server Response: ${response.body}');
+          print(
+            'Order Placed Successfully! (Mock API Response): ${response.body}',
+          );
         }
         clearCart();
         return true;

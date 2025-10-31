@@ -1,29 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:storeub/Carts/cart_controller.dart';
-import 'package:storeub/Screens/Cart_screen.dart';
-import 'package:storeub/Carts/CartItemModel.dart';
 import 'package:provider/provider.dart';
+import 'package:storeub/Carts/cart_controller.dart';
+import 'package:storeub/Carts/CartItemModel.dart';
 import 'package:storeub/Services/product_service.dart';
+import 'package:storeub/Screens/Cart_screen.dart';
 
-class MockProductModel {
-  final String id;
-  final String title;
-  final double price;
-  final String imageUrl;
-  MockProductModel({
-    required this.id,
-    required this.title,
-    required this.price,
-    required this.imageUrl,
-  });
+class ProductsScreen extends StatefulWidget {
+  const ProductsScreen({Key? key}) : super(key: key);
+
+  @override
+  State<ProductsScreen> createState() => _ProductsScreenState();
 }
 
-class ProductsScreen extends StatelessWidget {
+class _ProductsScreenState extends State<ProductsScreen> {
   final ProductService productService = ProductService();
-  String? selectedUniversity;
-  ProductsScreen({Key? key}) : super(key: key);
-  final List<String> universities = [
-    // --- Public Universities ---
+
+  String? _selectedUniversity;
+  final TextEditingController _searchController = TextEditingController();
+
+  List<ProductModel> _allProducts = [];
+  List<ProductModel> _filteredProducts = [];
+  bool _isLoading = true;
+  late Future<List<ProductModel>> _productsFuture;
+
+  final List<String> universities = const [
     'AABU',
     'UJ',
     'MU',
@@ -41,6 +41,53 @@ class ProductsScreen extends StatelessWidget {
     'JU',
     'Other',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _productsFuture = productService.fetchProducts();
+    _searchController.addListener(_filterProducts);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_filterProducts);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchAndSetProducts(List<ProductModel> products) async {
+    _allProducts = products;
+    _filteredProducts = _allProducts;
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _filterProducts() {
+    final query = _searchController.text.toLowerCase();
+
+    setState(() {
+      _filteredProducts =
+          _allProducts.where((product) {
+            final titleLower = product.title.toLowerCase();
+            return titleLower.contains(query);
+          }).toList();
+    });
+  }
+
+  void _onUniversityChanged(String? newValue) {
+    if (newValue != null) {
+      setState(() {
+        _selectedUniversity = newValue;
+        print('University Selected: $_selectedUniversity');
+        _filterProducts();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cartController = Provider.of<CartController>(context, listen: false);
@@ -53,8 +100,8 @@ class ProductsScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButton<String>(
-              value: selectedUniversity,
-              hint: Text(
+              value: _selectedUniversity,
+              hint: const Text(
                 'Select University',
                 style: TextStyle(
                   color: Colors.white,
@@ -62,15 +109,11 @@ class ProductsScreen extends StatelessWidget {
                   fontSize: 16,
                 ),
               ),
-              icon: Icon(Icons.keyboard_arrow_down, color: Colors.white),
-              style: TextStyle(color: Colors.black, fontSize: 16),
+              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
+              style: const TextStyle(color: Colors.black, fontSize: 16),
               dropdownColor: Colors.orange[50],
-              underline: Container(), //
-              onChanged: (String? newValue) {
-                //u should update class ProductModel --- add  a onChange
-
-                selectedUniversity = newValue!;
-              },
+              underline: Container(),
+              onChanged: _onUniversityChanged,
               items:
                   universities.map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
@@ -89,7 +132,7 @@ class ProductsScreen extends StatelessWidget {
                 alignment: Alignment.center,
                 children: [
                   IconButton(
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.shopping_bag_outlined,
                       color: Colors.white,
                     ),
@@ -108,8 +151,24 @@ class ProductsScreen extends StatelessWidget {
                       right: 8,
                       top: 8,
                       child: Container(
-                        //counter++
-                      ), //
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          '${cart.cartItems.length}', // ️
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
                     ),
                 ],
               );
@@ -118,60 +177,70 @@ class ProductsScreen extends StatelessWidget {
         ],
 
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(60.0),
+          preferredSize: const Size.fromHeight(60.0),
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 15.0,
+              vertical: 8.0,
+            ),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white, //
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(30.0),
               ),
-              child: const TextField(
-                decoration: InputDecoration(
+              child: TextField(
+                controller: _searchController, //
+                decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.search, color: Colors.grey),
-                  hintText: 'Search',
+                  hintText: 'Search Books...',
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(vertical: 15.0),
                 ),
-                // TODO: إضافة Controller ومنطق البحث هنا
               ),
             ),
           ),
         ),
       ),
       body: FutureBuilder<List<ProductModel>>(
-        future: productService.fetchProducts(),
+        future: _productsFuture, //  Future
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(color: Colors.orange),
             );
           }
+
           if (snapshot.hasError) {
-            print("Error loading products${snapshot.error}");
+            print("Error loading products: ${snapshot.error}");
             return const Center(
-              child: Text(
-                'An error occurred while loading books. Try again later.',
-              ),
+              child: Text('An error occurred while loading books.'),
             );
           }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text(' not found a book'));
+
+          if (snapshot.hasData && _allProducts.isEmpty) {
+            _fetchAndSetProducts(snapshot.data!);
           }
 
-          final products = snapshot.data!;
+          if (_filteredProducts.isEmpty && _searchController.text.isNotEmpty) {
+            return Center(
+              child: Text('No results found for "${_searchController.text}".'),
+            );
+          }
+          if (_filteredProducts.isEmpty) {
+            return const Center(child: Text('No books found.'));
+          }
 
           return GridView.builder(
             padding: const EdgeInsets.all(12.0),
-            itemCount: products.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            itemCount: _filteredProducts.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 2 / 3.5,
+              childAspectRatio: 2 / 3.6, //
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),
             itemBuilder: (ctx, i) {
-              final product = products[i];
+              final product = _filteredProducts[i];
 
               return Card(
                 elevation: 3,
@@ -187,21 +256,20 @@ class ProductsScreen extends StatelessWidget {
                       child: Image.network(
                         product.imageUrl,
                         fit: BoxFit.cover,
-
                         errorBuilder: (context, error, stackTrace) {
                           print(
                             "Wrong on loading image${product.imageUrl} - $error",
-                          ); //
+                          );
                           return Container(
                             color: Colors.grey[200],
                             child: Center(
                               child: Image.asset(
-                                'assets/images/mdi-light_image insidecart.png', //Default image
+                                'assets/images/mdi-light_image insidecart.png',
                                 fit: BoxFit.contain,
                                 width: 60,
                                 height: 60,
                                 errorBuilder:
-                                    (__, ___, ____) => const Icon(
+                                    (_, __, ___) => const Icon(
                                       Icons.menu_book,
                                       size: 40,
                                       color: Colors.grey,
@@ -212,20 +280,22 @@ class ProductsScreen extends StatelessWidget {
                         },
                       ),
                     ),
-
                     Expanded(
                       flex: 2,
                       child: Padding(
-                        padding: EdgeInsets.all(5.0),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8.0,
+                          vertical: 4.0,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             Text(
                               product.title,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                                fontSize: 13,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -233,13 +303,13 @@ class ProductsScreen extends StatelessWidget {
                             Text(
                               '\$${product.price.toStringAsFixed(2)} JD',
                               style: const TextStyle(
-                                color: Colors.deepOrange, //
+                                color: Colors.deepOrange,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14,
                               ),
                             ),
                             SizedBox(
-                              width: double.infinity, //
+                              width: double.infinity,
                               child: ElevatedButton.icon(
                                 onPressed: () {
                                   cartController.addToCart(product);
@@ -251,7 +321,7 @@ class ProductsScreen extends StatelessWidget {
                                       content: Text(
                                         '${product.title} Added to cart!',
                                       ),
-                                      duration: Duration(seconds: 1),
+                                      duration: const Duration(seconds: 1),
                                       behavior: SnackBarBehavior.floating,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
@@ -259,9 +329,12 @@ class ProductsScreen extends StatelessWidget {
                                     ),
                                   );
                                 },
-                                icon: Icon(Icons.add_shopping_cart, size: 25),
-                                label: Text(
-                                  'Added to cart!',
+                                icon: const Icon(
+                                  Icons.add_shopping_cart,
+                                  size: 16,
+                                ),
+                                label: const Text(
+                                  'Add to cart!',
                                   style: TextStyle(fontSize: 12),
                                 ),
                                 style: ElevatedButton.styleFrom(
@@ -285,10 +358,10 @@ class ProductsScreen extends StatelessWidget {
                   ],
                 ),
               );
-            }, //  itemBuilder
+            },
           );
-        }, //  builder
-      ), //  FutureBuilder
-    ); //  Scaffold
+        },
+      ),
+    );
   }
 }

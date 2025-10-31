@@ -20,7 +20,7 @@ class CartScreen extends StatelessWidget {
         elevation: 0,
         foregroundColor: Colors.black,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.of(context).pop();
           },
@@ -195,22 +195,22 @@ class PaymentSummaryWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Payment summary',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 15),
+          SizedBox(height: 15),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('subtotal', style: TextStyle(fontSize: 16)),
+              Text('subtotal', style: TextStyle(fontSize: 16)),
               Text(
                 '\$${cartController.totalAmount.toStringAsFixed(2)} JD',
                 style: const TextStyle(fontSize: 16),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
 
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -234,7 +234,7 @@ class PaymentSummaryWidget extends StatelessWidget {
             ],
           ),
 
-          const Divider(height: 25, thickness: 1),
+          Divider(height: 25, thickness: 1),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

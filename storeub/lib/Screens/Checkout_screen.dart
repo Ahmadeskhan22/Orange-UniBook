@@ -5,11 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:storeub/Carts/cart_controller.dart';
 import 'package:storeub/screens/done_screen.dart';
 import 'package:storeub/screens/cart_screen.dart';
-import 'package:location/location.dart';
-import 'package:geocoding/geocoding.dart' as geo;
 import 'package:storeub/services/location_service.dart';
-
-final LocationService _locationService = LocationService();
+import 'package:storeub/Screens/Add_cart.dart';
 
 enum DeliveryInstruction { call, message }
 
@@ -28,12 +25,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   bool _locationLoading = false;
   String? _fetchedAddress;
   final LocationService _locationService = LocationService();
+
   Future<void> _handleGetLocation() async {
     setState(() {
       _locationLoading = true;
       _fetchedAddress = null;
     });
-
     try {
       final address = await _locationService.getCurrentAddress();
       if (mounted) {
@@ -55,7 +52,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
   }
 
-  //final _addressController = TextEditingController();
   Future<void> _submitOrder() async {
     if (_fetchedAddress == null ||
         _fetchedAddress!.isEmpty ||
@@ -71,19 +67,48 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     setState(() {
       _isLoading = true;
     });
+
+    if (_paymentOption == PaymentMethod.card) {
+      final cartController = Provider.of<CartController>(
+        context,
+        listen: false,
+      );
+      final double total = cartController.totalAmount;
+
+      final paymentResult = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (ctx) => AddNewCardScreen(totalAmount: total),
+        ),
+      );
+
+      if (paymentResult == true) {
+        await _saveOrderToBackend();
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Payment was cancelled or failed.')),
+        );
+      }
+    } else {
+      await _saveOrderToBackend();
+    }
+  }
+
+  Future<void> _saveOrderToBackend() async {
     final CartController cartController = Provider.of<CartController>(
       context,
-      listen: true,
+      listen: false,
     );
-    ///////////TODO ADD  INFORMATION FRO USER
+
+    // ⚠️ TODO: استبدل هاي بالبيانات الحقيقية من Firebase Auth
     String actualUserID = "real_user_id_from_auth";
     String actualPhoneNumber = "+96278123456";
-    //////////////////////////////////////
 
     bool orderSuccess = await cartController.placeOrder(
       deliveryAddress: _fetchedAddress!,
-      ///////////TODO ADD  INFORMATION FRO USER ,   contactNumber: actualPhoneNumber,
-      //       userID: actualUserID,
       contactNumber: actualPhoneNumber,
       userID: actualUserID,
     );
@@ -112,9 +137,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const String displayPhoneNumber = "+96278****78";
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Checkout'), //
+        title: const Text('Checkout'),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -130,21 +157,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildLocationInfo(),
+              _buildLocationInfo(displayPhoneNumber),
               const SizedBox(height: 24),
-              Text(
+              const Text(
                 'Delivery instruction',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               _buildDeliveryOptions(),
               const SizedBox(height: 24),
-              Text(
+              const Text(
                 'Pay with',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               _buildPaymentOptions(),
               const SizedBox(height: 24),
-              PaymentSummaryWidget(),
+              const PaymentSummaryWidget(),
             ],
           ),
         ),
@@ -172,25 +199,66 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildLocationInfo() {
-    return Row(
+  Widget _buildLocationInfo(String phoneNumber) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(Icons.location_on, color: Colors.black, size: 40),
-        const SizedBox(width: 12),
-        const Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Select your location',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        Row(
+          children: [
+            const Icon(Icons.phone_outlined, size: 24, color: Colors.black54),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Phone number : $phoneNumber',
+                style: const TextStyle(fontSize: 16),
               ),
-            ],
-          ),
+            ),
+            TextButton(
+              onPressed: () {
+                /* TODO: Change phone logic */
+              },
+              child: const Text(
+                'Change',
+                style: TextStyle(color: Colors.orange),
+              ),
+            ),
+          ],
         ),
-        TextButton(
-          onPressed: _locationLoading ? null : _handleGetLocation,
-          child: Text('Change', style: TextStyle(color: Colors.orange)),
+        const SizedBox(height: 10),
+        InkWell(
+          onTap: _locationLoading ? null : _handleGetLocation,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12.0),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.location_on_outlined,
+                  color: _fetchedAddress == null ? Colors.grey : Colors.orange,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _locationLoading
+                        ? 'Fetching location...'
+                        : (_fetchedAddress ??
+                            'Tap here or \'Change\' to get location'),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color:
+                          _fetchedAddress == null ? Colors.grey : Colors.black,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     );
@@ -248,13 +316,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 _paymentOption = value!;
               });
             },
-            activeColor: Colors.orange, //
+            activeColor: Colors.orange,
           ),
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: Image.asset(
-            'assets/images/cash icon.png',
+            'assets/images/Vector_cash.png',
             width: 24,
             height: 24,
           ),
