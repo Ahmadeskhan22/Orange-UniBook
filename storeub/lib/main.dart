@@ -1,21 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:storeub/Carts/cart_controller.dart';
-import 'package:storeub/view_models/auth_view_model.dart';
-import 'Screens/products_screen(Home).dart';
-import 'Screens/Cart_screen.dart';
-import 'Screens/Checkout_screen.dart';
-import 'Screens/Done_screen.dart';
-// lib/main.dart
-
-import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
-import '/view_models/auth_view_model.dart';
+import 'package:storeub/view_models/auth_view_model.dart';
 import 'package:storeub/views/auth/started_screen.dart';
 import 'package:storeub/core/constants.dart';
+
 import 'package:storeub/Carts/cart_controller.dart';
+import 'package:storeub/Screens/products_screen(Home).dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,7 +53,8 @@ class MyApp extends StatelessWidget {
             if (viewModel.currentUser != null) {
               return ProductsScreen();
             }
-            return const StartedScreen();
+
+            return StartedScreen();
           },
         ),
       ),

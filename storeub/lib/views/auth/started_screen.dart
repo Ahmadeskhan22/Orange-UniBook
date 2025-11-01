@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../core/constants.dart';
-import 'sign_in_screen.dart';
+import 'package:storeub/core/constants.dart';
+import 'package:storeub/views/auth/sign_in_screen.dart';
 
 class StartedScreen extends StatelessWidget {
-  const StartedScreen({super.key});
+  StartedScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

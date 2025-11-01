@@ -50,7 +50,7 @@ class SettingScreen extends StatelessWidget {
             onTap: () async {
               await viewModel.logout();
               Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const StartedScreen()),
+                MaterialPageRoute(builder: (context) => StartedScreen()),
                 (Route<dynamic> route) => false,
               );
             },

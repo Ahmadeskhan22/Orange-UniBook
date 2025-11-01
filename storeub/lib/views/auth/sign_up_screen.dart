@@ -65,7 +65,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           key: _formKey,
           child: Column(
             children: [
-              Image.asset(AppAssets.signUp.logoPath, height: 80),
+              Image.asset('assets/images/sign_up/ub_logo(1).png', height: 80),
               const Text(
                 'Sign Up',
                 style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),

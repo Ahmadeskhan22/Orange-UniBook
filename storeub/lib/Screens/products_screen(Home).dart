@@ -4,6 +4,10 @@ import 'package:storeub/Carts/cart_controller.dart';
 import 'package:storeub/Carts/CartItemModel.dart';
 import 'package:storeub/Services/product_service.dart';
 import 'package:storeub/Screens/Cart_screen.dart';
+import 'package:storeub/views/profile/about_screen.dart';
+import 'package:storeub/views/profile/account_info_screen.dart';
+
+import '../views/profile/profile_screen.dart';
 
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({Key? key}) : super(key: key);
@@ -361,6 +365,42 @@ class _ProductsScreenState extends State<ProductsScreen> {
             },
           );
         },
+      ),
+
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0,
+        selectedItemColor: Colors.orange,
+        unselectedItemColor: Colors.grey,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        onTap: (index) {
+          if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const CartScreen()),
+            );
+          } else if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ProfileScreen()),
+            );
+          }
+        },
+
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart_outlined),
+            label: 'Cart',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outlined),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }
